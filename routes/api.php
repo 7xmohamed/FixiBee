@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
@@ -8,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ServiceController as ApiServiceController;
 use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Models\Booking;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +54,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{service}', [ServiceController::class, 'update']);
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    // Dashboard routes
+    Route::get('/dashboard/stats', function (Request $request) {
+        if (! Gate::allows('access-dashboard')) {
+            abort(403);
+        }
+
+        // Return appropriate stats based on user role
+        $user = $request->user();
+        if ($user->role === 'admin') {
+            return response()->json([
+                'totalUsers' => User::count(),
+                'totalProfessionals' => User::where('role', 'professional')->count(),
+                'totalEarnings' => Booking::sum('total_price'),
+                'totalBookings' => Booking::count()
+            ]);
+        }
+
+        return response()->json([
+            'totalBookings' => Booking::where('professional_id', $user->id)->count(),
+            'activeBookings' => Booking::where('professional_id', $user->id)
+                                    ->where('status', 'active')
+                                    ->count(),
+            'totalEarnings' => Booking::where('professional_id', $user->id)
+                                    ->sum('total_price'),
+            'upcomingBookings' => Booking::where('professional_id', $user->id)
+                                        ->where('booking_date', '>', now())
+                                        ->count()
+        ]);
+    })->middleware('can:access-dashboard');
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
