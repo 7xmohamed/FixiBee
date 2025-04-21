@@ -75,13 +75,18 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const register = async (userData) => {
+    const register = async (formData) => {
         try {
             setLoading(true);
             setError(null);
 
-            const response = await api.post('/register', userData);
-            const { user, access_token } = response.data;
+            const response = await api.post('/register', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            const { access_token, user } = response.data;
 
             // Store token and user data
             localStorage.setItem('token', access_token);
@@ -122,4 +127,4 @@ export function useAuth() {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
-} 
+}

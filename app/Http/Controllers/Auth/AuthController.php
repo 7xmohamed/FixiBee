@@ -17,50 +17,51 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:client,professional',
-            'address' => 'required|string',
-            'phone' => 'required|string',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'string', 'in:client,professional'],
+            'address' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'],
         ];
 
-        // Only require ID card files for professional registration
+        // Add validation rules for professional role
         if ($request->role === 'professional') {
-            $rules['id_card_front'] = 'required|file|mimes:jpeg,png,jpg|max:2048';
-            $rules['id_card_back'] = 'required|file|mimes:jpeg,png,jpg|max:2048';
+            $rules['id_card_front'] = ['required', 'file', 'image', 'mimes:jpeg,png,jpg', 'max:2048'];
+            $rules['id_card_back'] = ['required', 'file', 'image', 'mimes:jpeg,png,jpg', 'max:2048'];
         }
 
-        $request->validate($rules);
+        $validated = $request->validate($rules);
 
         // Handle file uploads for professionals
         $idCardFrontPath = null;
         $idCardBackPath = null;
         if ($request->role === 'professional') {
-            $idCardFrontPath = $this->storeFile($request->file('id_card_front'), 'id_cards');
-            $idCardBackPath = $this->storeFile($request->file('id_card_back'), 'id_cards');
+            $idCardFrontPath = $request->file('id_card_front')->store('users/id-cards', 'public');
+            $idCardBackPath = $request->file('id_card_back')->store('users/id-cards', 'public');
         }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'address' => $request->address,
-            'phone' => $request->phone,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'address' => $validated['address'],
+            'phone' => $validated['phone'],
             'id_card_front' => $idCardFrontPath,
             'id_card_back' => $idCardBackPath,
         ]);
 
         event(new Registered($user));
 
-        // Create a new token with a unique name
-        $token = $user->createToken('auth_token_' . Str::random(10))->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        Auth::login($user);
 
         return response()->json([
-            'user' => $user,
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'user' => $user
         ], 201);
     }
 
@@ -119,4 +120,4 @@ class AuthController extends Controller
         
         return $path;
     }
-} 
+}

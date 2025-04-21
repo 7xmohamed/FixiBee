@@ -89,9 +89,19 @@ function SignUp() {
         try {
             setError('');
             setLoading(true);
-            await register(formData);
+
+            // Create FormData object to handle file uploads
+            const formDataToSend = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (formData[key] !== null) {
+                    formDataToSend.append(key, formData[key]);
+                }
+            });
+
+            await register(formDataToSend);
+            // Navigation will be handled by the useEffect when user is set
         } catch (err) {
-            setError(err.message || 'Failed to create an account');
+            setError(err.response?.data?.message || 'Failed to create an account');
         } finally {
             setLoading(false);
         }
