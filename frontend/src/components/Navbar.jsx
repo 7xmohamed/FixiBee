@@ -1,4 +1,4 @@
-import { FaHome, FaServicestack, FaUser, FaSignOutAlt, FaCog, FaClipboardList } from 'react-icons/fa';
+import { FaServicestack, FaUser, FaSignOutAlt, FaClipboardList, FaCog } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,9 +27,6 @@ const Navbar = () => {
 
                     {/* Links on the right */}
                     <div className="flex space-x-6 items-center">
-                        <Link to="/" className="hover:text-gray-300 text-md font-medium transition duration-300 cursor-pointer">
-                            Home
-                        </Link>
                         <Link to="#services" className="hover:text-gray-300 text-md font-medium transition duration-300 cursor-pointer">
                             Services
                         </Link>
@@ -50,12 +47,14 @@ const Navbar = () => {
                                         >
                                             <FaUser className="mr-2" /> Profile
                                         </Link>
-                                        <Link
-                                            to="/dashboard"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                        >
-                                            <FaClipboardList className="mr-2" /> Dashboard
-                                        </Link>
+                                        {user.role !== 'client' && (
+                                            <Link
+                                                to="/dashboard"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                            >
+                                                <FaClipboardList className="mr-2" /> Dashboard
+                                            </Link>
+                                        )}
                                         <Link
                                             to="/settings"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -81,14 +80,10 @@ const Navbar = () => {
 
                 {/* Mobile Navigation - Fixed to bottom with z-index to stay on top */}
                 <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-gray-800 flex justify-around items-center p-2 z-50">
-                    <Link to="/" className="flex flex-col items-center text-xs hover:text-gray-300 transition duration-300 cursor-pointer">
-                        <FaHome className="text-xl" />
-                        <span className="mt-1">Home</span>
-                    </Link>
-                    <a href="#services" className="flex flex-col items-center text-xs hover:text-gray-300 transition duration-300 cursor-pointer">
+                    <Link to="#services" className="flex flex-col items-center text-xs hover:text-gray-300 transition duration-300 cursor-pointer">
                         <FaServicestack className="text-xl" />
                         <span className="mt-1">Services</span>
-                    </a>
+                    </Link>
                     {user ? (
                         <div className="relative">
                             <button
@@ -106,12 +101,14 @@ const Navbar = () => {
                                     >
                                         <FaUser className="mr-2" /> Profile
                                     </Link>
-                                    <Link
-                                        to="/dashboard"
-                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                    >
-                                        <FaClipboardList className="mr-2" /> Dashboard
-                                    </Link>
+                                    {user.role !== 'client' && (
+                                        <Link
+                                            to="/dashboard"
+                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                        >
+                                            <FaClipboardList className="mr-2" /> Dashboard
+                                        </Link>
+                                    )}
                                     <Link
                                         to="/settings"
                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"

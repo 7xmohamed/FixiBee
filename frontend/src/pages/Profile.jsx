@@ -5,6 +5,7 @@ import { UserIcon, EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/
 function Profile() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
+    // eslint-disable-next-line no-unused-vars
     const [error, setError] = useState(null);
 
     useEffect(() => {

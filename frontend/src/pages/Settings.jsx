@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { CogIcon, BellIcon, LockClosedIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { CogIcon, BellIcon, LockClosedIcon, GlobeAltIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 
 function Settings() {
+    // eslint-disable-next-line no-unused-vars
     const { user } = useAuth();
     const [notifications, setNotifications] = useState(true);
     const [emailUpdates, setEmailUpdates] = useState(true);
