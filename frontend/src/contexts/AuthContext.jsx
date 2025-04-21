@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -8,34 +9,45 @@ export function AuthProvider({ children }) {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Check if user is logged in
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const checkAuth = async () => {
             try {
-                setUser(JSON.parse(storedUser));
+                const token = localStorage.getItem('token');
+                if (token) {
+                    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    const response = await api.get('/user');
+                    setUser(response.data);
+                }
             } catch (err) {
-                console.error('Error parsing stored user:', err);
+                console.error('Auth check failed:', err);
+                localStorage.removeItem('token');
                 localStorage.removeItem('user');
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false);
+        };
+
+        checkAuth();
     }, []);
 
     const login = async (email, password) => {
         try {
             setLoading(true);
             setError(null);
-            // TODO: Replace with actual API call
-            const mockUser = {
-                id: 1,
-                name: 'John Doe',
-                email: email,
-                role: 'user'
-            };
-            setUser(mockUser);
-            localStorage.setItem('user', JSON.stringify(mockUser));
+
+            const response = await api.post('/login', { email, password });
+            const { user, access_token } = response.data;
+
+            // Store token and user data
+            localStorage.setItem('token', access_token);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Set authorization header
+            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+            setUser(user);
+            return user;
         } catch (err) {
-            setError(err.message || 'Failed to login');
+            setError(err.response?.data?.message || 'Failed to login');
             throw err;
         } finally {
             setLoading(false);
@@ -46,11 +58,17 @@ export function AuthProvider({ children }) {
         try {
             setLoading(true);
             setError(null);
-            // TODO: Replace with actual API call
-            setUser(null);
+
+            await api.post('/logout');
+
+            // Clear storage and headers
+            localStorage.removeItem('token');
             localStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+
+            setUser(null);
         } catch (err) {
-            setError(err.message || 'Failed to logout');
+            setError(err.response?.data?.message || 'Failed to logout');
             throw err;
         } finally {
             setLoading(false);
@@ -61,17 +79,21 @@ export function AuthProvider({ children }) {
         try {
             setLoading(true);
             setError(null);
-            // TODO: Replace with actual API call
-            const mockUser = {
-                id: 1,
-                name: userData.name,
-                email: userData.email,
-                role: 'user'
-            };
-            setUser(mockUser);
-            localStorage.setItem('user', JSON.stringify(mockUser));
+
+            const response = await api.post('/register', userData);
+            const { user, access_token } = response.data;
+
+            // Store token and user data
+            localStorage.setItem('token', access_token);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Set authorization header
+            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+            setUser(user);
+            return user;
         } catch (err) {
-            setError(err.message || 'Failed to register');
+            setError(err.response?.data?.message || 'Failed to register');
             throw err;
         } finally {
             setLoading(false);

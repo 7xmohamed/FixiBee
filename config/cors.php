@@ -21,7 +21,9 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'http://localhost:5173', // Vite default port
+        'http://127.0.0.1:5173'
     ],
 
     'allowed_origins_patterns' => [],
@@ -33,10 +35,15 @@ return [
         'Accept',
         'Authorization',
         'Origin',
-        'X-CSRF-TOKEN'
+        'X-CSRF-TOKEN',
+        'Access-Control-Allow-Origin',
+        'Access-Control-Allow-Credentials'
     ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'X-XSRF-TOKEN',
+        'X-CSRF-TOKEN'
+    ],
 
     'max_age' => 0,
 

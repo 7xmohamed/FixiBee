@@ -15,10 +15,13 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Remove direct creation of the test user to avoid duplicate email
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        //     'phone' => '1234567890',
+        //     'address' => '123 Main St',
+        // ]);
 
         if (app()->environment('local')) {
             $this->call([

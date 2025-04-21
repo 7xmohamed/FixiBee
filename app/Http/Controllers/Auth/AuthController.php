@@ -9,28 +9,36 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:client,professional',
             'address' => 'required|string',
             'phone' => 'required|string',
-            'id_card_front' => 'required_if:role,professional|file|mimes:jpeg,png,jpg|max:2048',
-            'id_card_back' => 'required_if:role,professional|file|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        ];
+
+        // Only require ID card files for professional registration
+        if ($request->role === 'professional') {
+            $rules['id_card_front'] = 'required|file|mimes:jpeg,png,jpg|max:2048';
+            $rules['id_card_back'] = 'required|file|mimes:jpeg,png,jpg|max:2048';
+        }
+
+        $request->validate($rules);
 
         // Handle file uploads for professionals
         $idCardFrontPath = null;
         $idCardBackPath = null;
         if ($request->role === 'professional') {
-            $idCardFrontPath = $request->file('id_card_front')->store('id_cards', 'public');
-            $idCardBackPath = $request->file('id_card_back')->store('id_cards', 'public');
+            $idCardFrontPath = $this->storeFile($request->file('id_card_front'), 'id_cards');
+            $idCardBackPath = $this->storeFile($request->file('id_card_back'), 'id_cards');
         }
 
         $user = User::create([
@@ -46,7 +54,8 @@ class AuthController extends Controller
 
         event(new Registered($user));
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Create a new token with a unique name
+        $token = $user->createToken('auth_token_' . Str::random(10))->plainTextToken;
 
         return response()->json([
             'user' => $user,
@@ -70,10 +79,11 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->firstOrFail();
         
-        // Regenerate the session to prevent session fixation
-        $request->session()->regenerate();
+        // Revoke all existing tokens for this user
+        $user->tokens()->delete();
         
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Create a new token with a unique name
+        $token = $user->createToken('auth_token_' . Str::random(10))->plainTextToken;
 
         return response()->json([
             'user' => $user,
@@ -87,16 +97,26 @@ class AuthController extends Controller
         // Revoke the token that was used to authenticate the current request
         $request->user()->currentAccessToken()->delete();
         
-        // Clear the session
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
         return response()->json(['message' => 'Successfully logged out']);
     }
 
     public function user(Request $request)
     {
         return response()->json($request->user());
+    }
+
+    private function storeFile($file, $directory)
+    {
+        if (!$file) {
+            return null;
+        }
+
+        // Generate a unique filename
+        $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+        
+        // Store the file in the specified directory
+        $path = $file->storeAs($directory, $filename, 'public');
+        
+        return $path;
     }
 } 
