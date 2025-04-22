@@ -1,17 +1,17 @@
 
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ServiceController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ServiceController as ApiServiceController;
-use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Models\Booking;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Api\ServiceController as ApiServiceController;
+use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 
 /*
 |--------------------------------------------------------------------------

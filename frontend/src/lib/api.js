@@ -5,13 +5,12 @@ const api = axios.create({
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        'Accept': 'application/json'
     }
 });
 
-// Request interceptor to add CSRF token
-api.interceptors.request.use(async (config) => {
-    // Get CSRF token from cookie
+// Add CSRF token to requests for Laravel compatibility
+api.interceptors.request.use(config => {
     const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('XSRF-TOKEN='))
@@ -20,21 +19,20 @@ api.interceptors.request.use(async (config) => {
     if (csrfToken) {
         config.headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
     }
-
     return config;
 });
 
-// Response interceptor to handle errors
+// Global error handling and auth state management
 api.interceptors.response.use(
     response => response,
     error => {
         if (error.response?.status === 401) {
-            // Handle unauthorized access
-            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            delete api.defaults.headers.common['Authorization'];
             window.location.href = '/login';
         }
         return Promise.reject(error);
     }
 );
 
-export default api; 
+export default api;

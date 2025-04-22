@@ -1,130 +1,179 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 
-const AuthContext = createContext();
+/**
+ * @typedef {Object} AuthState
+ * @property {Object|null} user - The authenticated user object
+ * @property {boolean} loading - Loading state for auth operations
+ * @property {string|null} error - Error message if auth operation fails
+ * @property {boolean} isAuthenticated - Whether user is authenticated
+ */
 
+/**
+ * @typedef {Object} AuthContextType
+ * @property {Object|null} user - The authenticated user
+ * @property {boolean} loading - Loading state
+ * @property {string|null} error - Error message
+ * @property {boolean} isAuthenticated - Auth status
+ * @property {(email: string, password: string) => Promise<void>} login - Login function
+ * @property {() => Promise<void>} logout - Logout function
+ * @property {(formData: FormData) => Promise<void>} register - Registration function
+ */
+
+const AuthContext = createContext(/** @type {AuthContextType|null} */(null));
+
+// Token management utilities
+const TOKEN_KEY = 'auth_token';
+const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
+const storeToken = token => localStorage.setItem(TOKEN_KEY, token);
+const removeToken = () => localStorage.removeItem(TOKEN_KEY);
+
+// Update authorization header
+const setAuthHeader = token => {
+    if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+        delete api.defaults.headers.common['Authorization'];
+    }
+};
+
+/**
+ * Authentication Provider Component
+ * @param {{ children: React.ReactNode }} props
+ */
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [state, setState] = useState({
+        user: null,
+        loading: true,
+        error: null,
+        isAuthenticated: false
+    });
 
+    // Handle authentication state changes
+    const updateAuthState = useCallback((updates) => {
+        setState(prev => ({ ...prev, ...updates }));
+    }, []);
+
+    // Initialize auth state with retry mechanism
     useEffect(() => {
-        const checkAuth = async () => {
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+
+        const initAuth = async () => {
+            const token = getStoredToken();
+            if (!token) {
+                updateAuthState({ loading: false });
+                return;
+            }
+
             try {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await api.get('/user');
-                    setUser(response.data);
-                }
+                setAuthHeader(token);
+                const { data: user } = await api.get('/user');
+                updateAuthState({
+                    user,
+                    isAuthenticated: true,
+                    loading: false,
+                    error: null
+                });
             } catch (err) {
-                console.error('Auth check failed:', err);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-            } finally {
-                setLoading(false);
+                if (retryCount < MAX_RETRIES && err.response?.status === 503) {
+                    retryCount++;
+                    setTimeout(initAuth, 1000 * retryCount);
+                    return;
+                }
+
+                removeToken();
+                setAuthHeader(null);
+                updateAuthState({
+                    user: null,
+                    isAuthenticated: false,
+                    loading: false,
+                    error: 'Session expired'
+                });
             }
         };
 
-        checkAuth();
-    }, []);
+        initAuth();
+    }, [updateAuthState]);
 
+    // Authentication methods
     const login = async (email, password) => {
         try {
-            setLoading(true);
-            setError(null);
+            updateAuthState({ loading: true, error: null });
+            const { data } = await api.post('/login', { email, password });
 
-            const response = await api.post('/login', { email, password });
-            const { user, access_token } = response.data;
+            storeToken(data.access_token);
+            setAuthHeader(data.access_token);
 
-            // Store token and user data
-            localStorage.setItem('token', access_token);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            // Set authorization header
-            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-
-            setUser(user);
-            return user;
+            updateAuthState({
+                user: data.user,
+                isAuthenticated: true,
+                loading: false
+            });
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to login');
-            throw err;
-        } finally {
-            setLoading(false);
+            const errorMsg = err.response?.data?.message || 'Authentication failed';
+            updateAuthState({ error: errorMsg, loading: false });
+            throw new Error(errorMsg);
         }
     };
 
     const logout = async () => {
         try {
-            setLoading(true);
-            setError(null);
-
+            updateAuthState({ loading: true });
             await api.post('/logout');
-
-            // Clear storage and headers
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            delete api.defaults.headers.common['Authorization'];
-
-            setUser(null);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to logout');
-            throw err;
+            console.error('Logout error:', err);
         } finally {
-            setLoading(false);
+            removeToken();
+            setAuthHeader(null);
+            updateAuthState({
+                user: null,
+                isAuthenticated: false,
+                loading: false
+            });
         }
     };
 
     const register = async (formData) => {
         try {
-            setLoading(true);
-            setError(null);
-
-            const response = await api.post('/register', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            updateAuthState({ loading: true, error: null });
+            const { data } = await api.post('/register', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            const { access_token, user } = response.data;
+            storeToken(data.access_token);
+            setAuthHeader(data.access_token);
 
-            // Store token and user data
-            localStorage.setItem('token', access_token);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            // Set authorization header
-            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-
-            setUser(user);
-            return user;
+            updateAuthState({
+                user: data.user,
+                isAuthenticated: true,
+                loading: false
+            });
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to register');
-            throw err;
-        } finally {
-            setLoading(false);
+            const errorMsg = err.response?.data?.message || 'Registration failed';
+            updateAuthState({ error: errorMsg, loading: false });
+            throw new Error(errorMsg);
         }
     };
 
-    const value = {
-        user,
-        loading,
-        error,
+    const contextValue = {
+        ...state,
         login,
         logout,
         register
     };
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-export function useAuth() {
+export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
+    if (!context) {
+        throw new Error('useAuth must be used within AuthProvider');
     }
     return context;
-}
+};

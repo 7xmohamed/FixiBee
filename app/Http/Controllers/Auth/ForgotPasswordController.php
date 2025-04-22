@@ -1,8 +1,9 @@
+<?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -71,4 +72,4 @@ class ForgotPasswordController extends Controller
             'message' => 'Password reset successfully'
         ]);
     }
-} 
+}
