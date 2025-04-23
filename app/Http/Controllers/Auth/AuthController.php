@@ -120,4 +120,45 @@ class AuthController extends Controller
         
         return $path;
     }
+
+    public function update(Request $request)
+    {
+        $user = $request->user();
+        $path = null;
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $request->validate([
+            'profile_picture' => ['file', 'image', 'max:2048'],
+            ]);
+
+            $path = $request->file('profile_picture')->store('users/profile_pictures', 'public');
+
+            // if ($user->profile_picture) {
+            //     Storage::disk('public')->delete($user->profile_picture);
+            // }
+
+            $validated['profile_picture'] = $path;
+        }
+
+
+        $user->update(
+            [
+                'name' => $validated['name'] ?? $user->name,
+                'address' => $validated['address'] ?? $user->address,
+                'phone' => $validated['phone'] ?? $user->phone,
+                'profile_picture' => $path ?? null,
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ]);
+    }
 }

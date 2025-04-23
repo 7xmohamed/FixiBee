@@ -27,6 +27,10 @@ use App\Models\Booking;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+// routes/api.php
+Route::middleware('auth:sanctum')->put('/updateprofile', [AuthController::class, 'update']);
+
+
 
 // Categories (Public)
 Route::get('/categories', [CategoryController::class, 'index']);

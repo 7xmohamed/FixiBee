@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { CogIcon, BellIcon, LockClosedIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { BellIcon, GlobeAltIcon, EnvelopeIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
 function Settings() {
-    const { user } = useAuth();
+    const { user } = useAuth(); // Keeping this for potential future use
     const [notifications, setNotifications] = useState(true);
     const [emailUpdates, setEmailUpdates] = useState(true);
     const [language, setLanguage] = useState('en');
@@ -17,9 +18,12 @@ function Settings() {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white shadow rounded-lg">
-                    <div className="px-4 py-5 sm:px-6">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">Settings</h3>
-                        <p className="mt-1 max-w-2xl text-sm text-gray-500">Manage your account settings and preferences.</p>
+                    <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg leading-6 font-medium text-gray-900">Settings</h3>
+                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Manage your account settings and preferences.</p>
+                        </div>
+
                     </div>
                     <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
                         <div className="space-y-6">
@@ -71,6 +75,19 @@ function Settings() {
                                 </div>
                             </div>
 
+                            {/* Profile Settings */}    
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <PencilIcon className="h-5 w-5 text-gray-400 mr-3" />
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-900">Profile Settings</h4>
+                                        <p className="text-sm text-gray-500">Edit your profile information</p>
+                                    </div>
+                                </div>
+                                <Link to="/updateprofile" className="text-blue-600 hover:text-blue-500 font-medium">Edit</Link>
+                            </div>
+
+
                             {/* Language Settings */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
@@ -91,6 +108,7 @@ function Settings() {
                                 </select>
                             </div>
                         </div>
+                        
 
                         <div className="mt-6">
                             <button
@@ -104,8 +122,9 @@ function Settings() {
                     </div>
                 </div>
             </div>
-        </div>
-    );
-}
+            </div>
+        );
+    }
 
-export default Settings; 
+
+export default Settings;
