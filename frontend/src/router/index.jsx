@@ -1,4 +1,3 @@
-// src/router/index.jsx
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayouts";
 import Home from "../pages/Home";
@@ -9,6 +8,8 @@ import CheckPro from "../pages/CheckPro";
 import Settings from "../pages/Settings";
 import Profile from "../pages/Profile";
 import { Navigate } from "react-router-dom";
+import UpdateUser from "../pages/UpdateUser";
+import HomeWithLocation from "../pages/HomeWithLocation";
 
 export const router = createBrowserRouter([
     {
@@ -19,11 +20,20 @@ export const router = createBrowserRouter([
             { index: true, element: <Home /> },
             {path: '/profile', element: <Profile/>},
             { path: 'login', element: <Login /> },
+            {path:'updateprofile',element:<UpdateUser/>},
             { path: 'register', element: <SignUp /> },
             { path: 'dashboard', element: <Dashboard /> },
             {path: 'dashboard/checkpro', element: <CheckPro />},
             { path: 'settings', element: <Settings /> },
             { path: '*', element: <Navigate to="/" /> }
         ]
-    }
+    },
+    {
+        path:'/:country/:lang/:city',
+        element: <MainLayout />,    
+        children:[
+            {index:true,element:<HomeWithLocation/>},
+        ]
+
+    },
 ]);
