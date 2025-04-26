@@ -25,15 +25,8 @@ export const router = createBrowserRouter([
             { path: 'dashboard', element: <Dashboard /> },
             {path: 'dashboard/checkpro', element: <CheckPro />},
             { path: 'settings', element: <Settings /> },
-            { path: '*', element: <Navigate to="/" /> }
+            { path: '*', element: <Navigate to="/" /> },
+            {path: '/:country/:lang/:city', element: <HomeWithLocation />}
         ]
-    },
-    {
-        path:'/:country/:lang/:city',
-        element: <MainLayout />,    
-        children:[
-            {index:true,element:<HomeWithLocation/>},
-        ]
-
     },
 ]);
