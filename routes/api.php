@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Auth\AuthController;
@@ -103,3 +104,4 @@ Route::get('/categories/{id}', [ApiCategoryController::class, 'show']);
 // Password Reset Routes
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
+Route::get('/dashboard/checkpro/{proId}',[ProController::class,'index']);

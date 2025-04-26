@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
+import { useNavigate } from "react-router-dom";
 
 const CheckPro = () => {
+    const navigate = useNavigate();
     const [professionals, setProfessionals] = useState([
         {
             id: 1,
@@ -35,7 +37,7 @@ const CheckPro = () => {
     };
 
     const handleDetails = (id) => {
-        console.log("Viewing details for professional with ID:", id);
+        navigate(`/dashboard/checkpro/${id}`);
     };
 
     return (
