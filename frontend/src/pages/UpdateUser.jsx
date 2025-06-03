@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth  } from '../contexts/AuthContext';
 import api from '../lib/api';
 
+
+
 function Profile() {
-    const { user } = useAuth();
+    const {updateProfile, user } = useAuth();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -14,7 +16,7 @@ function Profile() {
         profile_picture: null,
     });
 
-    const [preview, setPreview] = useState(null); // For image preview
+    const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -27,7 +29,7 @@ function Profile() {
                 role: user.role || '',
                 address: user.address || '',
                 phone: user.phone || '',
-                profile_picture: null,
+                profile_picture: null, 
             });
             setLoading(false);
         }
@@ -35,34 +37,44 @@ function Profile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
     };
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        setFormData({ ...formData, profile_picture: file });
-        setPreview(file ? URL.createObjectURL(file) : null); // Set preview URL
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            profile_picture: file,
+        }));
+        setPreview(file ? URL.createObjectURL(file) : null);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null);
         setSuccess(null);
-
-        const formDataToSend = new FormData();
-        Object.keys(formData).forEach(key => {
-            if (formData[key] !== null) {
-                formDataToSend.append(key, formData[key]);
-            }
-        });
+        setError(null);
 
         try {
-            const response = await api.put('/updateprofile', formDataToSend);
+            const formDataToSend = new FormData();
 
-            setSuccess('Profile updated successfully.');
+            formDataToSend.append('name', formData.name);
+            formDataToSend.append('address', formData.address);
+            formDataToSend.append('phone', formData.phone);
+            
+            if (formData.profile_picture) {
+                formDataToSend.append('profile_picture', formData.profile_picture);
+            }
+
+        
+            await updateProfile(formDataToSend);
+
+            setSuccess('Profile updated successfully. VIEW');
             console.log('Updated user:', response.data.user);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to update profile');
+            setError(err.response?.data?.message || 'Failed to update profile VIEW');
         }
     };
 
@@ -101,7 +113,6 @@ function Profile() {
                             name="email"
                             value={formData.email}
                             disabled
-                            onChange={handleChange}
                             className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 text-gray-500 bg-gray-100 cursor-not-allowed sm:text-sm"
                         />
                     </div>
@@ -148,8 +159,8 @@ function Profile() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Role
-                            <span> : {formData.role}</span>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Role : <span>{formData.role}</span>
                         </label>
                     </div>
 

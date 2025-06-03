@@ -157,11 +157,33 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const updateProfile = async (formData) => {
+        try {
+            updateAuthState({ loading: true, error: null });
+            
+            const { data } = await api.post('/updateprofile', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+    
+            updateAuthState({
+                user: data.user,
+                isAuthenticated: true, 
+                loading: false
+            });
+    
+        } catch (err) {
+            const errorMsg = err.response?.data?.message || 'Profile update failed';
+            updateAuthState({ error: errorMsg, loading: false });
+            throw new Error(errorMsg);
+        }
+    };
+    
     const contextValue = {
         ...state,
         login,
         logout,
-        register
+        register,
+        updateProfile,
     };
 
     return (

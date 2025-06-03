@@ -19,16 +19,25 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'address',
-        'phone',
-        'profile_picture',
-        'id_card_front',
-        'id_card_back',
+        'name', 
+        'email', 
+        'password', 
+        'phone', 
+        'role', 
+        'profile_picture', 
+        'id_card_front', 
+        'id_card_back'
     ];
+
+    public function professional()
+    {
+        return $this->hasOne(Professional::class);
+    }
+
+    public function client()
+    {
+        return $this->hasOne(Client::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

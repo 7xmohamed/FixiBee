@@ -29,7 +29,7 @@ use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 // routes/api.php
-Route::middleware('auth:sanctum')->put('/updateprofile', [AuthController::class, 'update']);
+Route::middleware('auth:sanctum')->post('/updateprofile', [AuthController::class, 'update']);
 
 
 
